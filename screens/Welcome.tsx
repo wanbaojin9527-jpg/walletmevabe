@@ -24,7 +24,7 @@ const Welcome: React.FC<WelcomeProps> = ({ onNavigate }) => {
 
         <div className="w-full max-w-xs aspect-square bg-[#FFE4E9] rounded-full overflow-hidden flex items-center justify-center p-6 relative">
              <img 
-               src={'https://i.pinimg.com/originals/fd/9e/f4/fd9ef4e6cae927086a859b1fcf92ee91.jpg'} 
+               src={APP_CONFIG.WELCOME_IMAGE} 
                alt="Mother and Baby illustration" 
                className="w-full h-full object-cover rounded-full shadow-inner"
              />

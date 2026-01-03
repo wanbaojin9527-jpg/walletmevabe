@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { ArrowLeft, User, Phone, Lock, AlertCircle } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { ArrowLeft, User, Phone, Lock, AlertCircle, Camera, Image as ImageIcon } from 'lucide-react';
 import { Screen, User as UserType } from '../types';
 import { APP_CONFIG } from '../constants';
 
@@ -16,11 +16,33 @@ const Register: React.FC<RegisterProps> = ({ onNavigate, onRegister }) => {
     password: '',
     confirmPassword: ''
   });
+  const [avatar, setAvatar] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        setError('Ảnh quá lớn, mẹ chọn ảnh dưới 2MB nhé!');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatar(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleRegister = () => {
     setError('');
     
+    if (!avatar) {
+      setError('Mẹ vui lòng chọn ảnh đại diện nhé');
+      return;
+    }
+
     if (!formData.name.trim()) {
       setError('Vui lòng nhập họ và tên');
       return;
@@ -41,14 +63,11 @@ const Register: React.FC<RegisterProps> = ({ onNavigate, onRegister }) => {
       return;
     }
 
-    // Không kiểm tra localStorage ở đây nữa, App.tsx sẽ gọi CloudAPI để tạo user
-    // Nếu số điện thoại tồn tại, Supabase sẽ trả về lỗi và App.tsx sẽ alert.
-
     const newUser: UserType = {
       name: formData.name,
       phone: formData.phone,
       balance: 0,
-      avatar: `${APP_CONFIG.DEFAULT_AVATAR_BASE}${formData.phone}`,
+      avatar: avatar,
       password: formData.password,
       banks: []
     };
@@ -57,14 +76,44 @@ const Register: React.FC<RegisterProps> = ({ onNavigate, onRegister }) => {
   };
 
   return (
-    <div className="min-h-full flex flex-col bg-white p-6">
-      <button onClick={() => onNavigate('WELCOME')} className="mb-8 w-10 h-10 flex items-center justify-center bg-gray-50 rounded-full">
+    <div className="min-h-full flex flex-col bg-white p-6 pb-12 overflow-y-auto">
+      <button onClick={() => onNavigate('WELCOME')} className="mb-6 w-10 h-10 flex items-center justify-center bg-gray-50 rounded-full active:scale-90 transition-transform">
         <ArrowLeft size={20} className="text-gray-600" />
       </button>
 
-      <div className="mb-8">
+      <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Tạo tài khoản</h2>
         <p className="text-gray-500 mt-1">Gia nhập cộng đồng Mẹ & Bé cao cấp</p>
+      </div>
+
+      {/* Avatar Picker Section */}
+      <div className="flex flex-col items-center mb-8">
+        <div 
+          onClick={() => fileInputRef.current?.click()}
+          className="relative group cursor-pointer"
+        >
+          <div className="w-28 h-28 rounded-full border-4 border-pink-50 overflow-hidden bg-gray-50 flex items-center justify-center shadow-lg transition-all group-active:scale-95">
+            {avatar ? (
+              <img src={avatar} alt="Preview" className="w-full h-full object-cover" />
+            ) : (
+              <div className="flex flex-col items-center text-gray-300">
+                <ImageIcon size={32} />
+                <span className="text-[10px] font-bold mt-1 uppercase">Ảnh của mẹ</span>
+              </div>
+            )}
+          </div>
+          <div className="absolute bottom-0 right-0 bg-[#FF85A1] p-2 rounded-full text-white shadow-md border-2 border-white">
+            <Camera size={16} />
+          </div>
+        </div>
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleImageChange} 
+          accept="image/*" 
+          className="hidden" 
+        />
+        <p className="text-[10px] text-gray-400 font-bold mt-3 uppercase tracking-wider">Nhấn để chọn ảnh đại diện</p>
       </div>
 
       {error && (
@@ -74,7 +123,7 @@ const Register: React.FC<RegisterProps> = ({ onNavigate, onRegister }) => {
         </div>
       )}
 
-      <div className="space-y-4 flex-1">
+      <div className="space-y-4">
         <div className="space-y-2">
           <label className="text-sm font-semibold text-gray-700 ml-1">Họ và tên</label>
           <div className="relative">
@@ -129,11 +178,6 @@ const Register: React.FC<RegisterProps> = ({ onNavigate, onRegister }) => {
               className="w-full pl-12 pr-4 py-4 bg-gray-50 rounded-2xl border-none focus:ring-2 focus:ring-[#FF85A1] transition-all outline-none"
             />
           </div>
-        </div>
-
-        <div className="flex items-center space-x-2 py-2">
-          <input type="checkbox" id="terms" className="w-5 h-5 accent-[#FF85A1] rounded cursor-pointer" />
-          <label htmlFor="terms" className="text-sm text-gray-600">Tôi đồng ý với chính sách của Mẹ & Bé</label>
         </div>
 
         <button 

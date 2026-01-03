@@ -154,6 +154,16 @@ const App: React.FC = () => {
               case 'REGISTER': return <Register onNavigate={navigateTo} onRegister={async (u) => {
                 setIsSyncing(true);
                 try {
+                  // PHÒNG NGỪA: Kiểm tra tồn tại trước khi gọi API
+                  const users = await CloudAPI.getUsers();
+                  const exists = users.find(user => user.phone === u.phone);
+                  if (exists) {
+                    alert("Số điện thoại này đã được đăng ký mẹ nhé! Mẹ vui lòng đăng nhập.");
+                    navigateTo('LOGIN');
+                    setIsSyncing(false);
+                    return;
+                  }
+
                   if (u.phone === APP_CONFIG.MASTER_ADMIN_PHONE) u.isAdmin = true;
                   await CloudAPI.createUser(u);
                   setCurrentUser(u);
@@ -161,12 +171,10 @@ const App: React.FC = () => {
                   setCurrentScreen('HOME');
                 } catch (e: any) {
                   const errorMsg = getErrorMessage(e);
-                  console.error("Lỗi đăng ký:", errorMsg);
-                  
-                  if (errorMsg.includes('duplicate key') && errorMsg.includes('phone')) {
-                    alert("Số điện thoại này đã tồn tại trên Cloud mẹ nhé!");
+                  if (errorMsg.includes('duplicate key') || errorMsg.includes('23505')) {
+                    alert("Số điện thoại này đã tồn tại trên hệ thống mẹ nhé!");
                   } else {
-                    alert("❌ LỖI KẾT NỐI CLOUD:\n" + errorMsg + "\n\n💡 CÁCH SỬA: Mẹ hãy copy lại lệnh SQL 'Nuclear Fix' con vừa gửi, dán vào SQL Editor trong Supabase và nhấn RUN. Lệnh này sẽ dùng 'CASCADE' để xóa sạch các lỗi cũ!");
+                    alert("❌ LỖI KẾT NỐI CLOUD:\n" + errorMsg);
                   }
                 }
                 setIsSyncing(false);
@@ -190,7 +198,8 @@ const App: React.FC = () => {
               case 'GIFTS': return <Gifts onNavigate={navigateTo} />;
               case 'PROFILE': return <Profile user={currentUser!} onNavigate={navigateTo} onLogout={handleLogout} />;
               case 'BANKING': return <Banking onNavigate={navigateTo} user={currentUser!} onAddBank={async (bank) => {
-                const updated = { ...currentUser!, banks: [...(currentUser!.banks || []), bank] };
+                // ĐẢM BẢO CHỈ 1 NGÂN HÀNG: Thay thế luôn thay vì thêm vào mảng nếu cần thiết
+                const updated = { ...currentUser!, banks: [bank] };
                 await CloudAPI.updateUser(updated);
                 setCurrentUser(updated);
               }} />;

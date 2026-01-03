@@ -74,7 +74,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onNavigate, onLogout }) => {
                   <Heart size={14} className="text-[#FF85A1] fill-current" />
                 )}
                 <span className={`text-[11px] font-bold uppercase tracking-wider ${user.isAdmin ? 'text-slate-600' : 'text-[#FF85A1]'}`}>
-                  {user.isAdmin ? 'Chế độ Quản trị viên' : 'KHÁCH HÀNG MAY MẮN'}
+                  {user.isAdmin ? 'Chế độ Quản trị viên' : 'Hội viên cao cấp'}
                 </span>
             </div>
         </div>
